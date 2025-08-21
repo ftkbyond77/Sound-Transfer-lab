@@ -138,6 +138,7 @@ def process_directory(input_dir, output_dir, speaker_name="unknown"):
     return processed_count
 
 def main():
+    global SAMPLE_RATE, N_MELS  # Declare as global to modify module-level variables
     parser = argparse.ArgumentParser(description="Preprocess audio files for StarGAN-VC training")
     parser.add_argument("--source_dir", default=DEFAULT_SOURCE_DIR, 
                        help="Source speaker audio directory")
@@ -153,7 +154,6 @@ def main():
     args = parser.parse_args()
     
     # Update global parameters
-    global SAMPLE_RATE, N_MELS
     SAMPLE_RATE = args.sample_rate
     N_MELS = args.n_mels
     

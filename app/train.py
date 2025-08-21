@@ -23,8 +23,16 @@ def train_stargan_vc():
 
     # Dataloader
     try:
-        dataloader = get_dataloader(source_dir, target_dir, batch_size=8)
+        dataloader = get_dataloader(source_dir, target_dir, batch_size=1)
         print(f"Dataset loaded successfully. Total batches: {len(dataloader)}")
+        if len(dataloader) == 0:
+            print("Error: Dataloader is empty. Check the dataset and get_dataloader implementation.")
+            # List files in directories for debugging
+            source_files = os.listdir(source_dir)
+            target_files = os.listdir(target_dir)
+            print(f"Source directory ({source_dir}) contains: {source_files}")
+            print(f"Target directory ({target_dir}) contains: {target_files}")
+            return
     except Exception as e:
         print(f"Error loading dataset: {e}")
         return

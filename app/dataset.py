@@ -54,6 +54,6 @@ class StarGANVCDataset(Dataset):
         # Return mel + speaker ID
         return source_mel, torch.tensor(0, dtype=torch.long), target_mel, torch.tensor(1, dtype=torch.long)
 
-def get_dataloader(source_dir, target_dir, batch_size=8, num_workers=0):
+def get_dataloader(source_dir, target_dir, batch_size=1, num_workers=0):
     dataset = StarGANVCDataset(source_dir, target_dir)
     return DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)

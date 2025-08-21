@@ -3,6 +3,7 @@ import numpy as np
 import librosa
 import soundfile as sf
 import os
+import argparse
 from model import Generator
 
 def load_model(model_path, device):
@@ -86,30 +87,21 @@ def convert_voice(model_path, source_audio_path, output_path, target_speaker_id=
     # Convert back to numpy
     converted_mel = converted_mel.squeeze(0).cpu().numpy()
     
-    # Save the mel spectrogram (you'll need a vocoder to convert to audio)
-    # For now, save as .npy file
+    # Save the mel spectrogram
     mel_output_path = output_path.replace('.wav', '_mel.npy')
     np.save(mel_output_path, converted_mel)
     print(f"Converted mel spectrogram saved to: {mel_output_path}")
     
-    # TODO: Use a vocoder (HiFi-GAN, MelGAN, etc.) to convert mel to waveform
-    # This is a placeholder - you need to implement proper vocoder
+    # Placeholder: Convert mel to audio using Griffin-Lim
     try:
-        # Placeholder: Convert mel back to waveform using Griffin-Lim
-        # Note: This won't produce high quality audio, use a neural vocoder instead
         mel_db = converted_mel
         mel_linear = np.expm1(mel_db)  # Inverse of log1p
-        
-        # Use Griffin-Lim to reconstruct audio (poor quality, for demo only)
         audio_reconstructed = librosa.feature.inverse.mel_to_audio(
             mel_linear, sr=16000, n_fft=1024, hop_length=256
         )
-        
-        # Save audio
         sf.write(output_path, audio_reconstructed, 16000)
         print(f"Converted audio saved to: {output_path}")
         print("Note: Using Griffin-Lim reconstruction. For better quality, use a neural vocoder.")
-        
     except Exception as e:
         print(f"Error converting mel to audio: {e}")
         print("Mel spectrogram saved successfully, but audio conversion failed.")
@@ -133,21 +125,23 @@ def batch_convert(model_path, input_dir, output_dir, target_speaker_id=1):
             else:
                 print(f"✗ Failed to convert: {filename}")
 
-# Example usage
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Voice conversion with StarGAN-VC")
+    parser.add_argument("--model_path", default="/workspace/checkpoints/stargan_vc_epoch_100.pth", 
+                        help="Path to trained model or checkpoint")
+    parser.add_argument("--source_file", default="/workspace/processed/source/Queen-bohemian.npy", 
+                        help="Source audio or .npy file")
+    parser.add_argument("--output_file", default="/workspace/converted_output.wav", 
+                        help="Output audio file")
+    args = parser.parse_args()
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    # Single file conversion
-    model_path = "/workspace/starGAN_G.pth"  # or use checkpoint: "/workspace/checkpoints/stargan_vc_epoch_100.pth"
-    source_file = "/workspace/processed/source/Queen-bohemian.npy"  # or .wav file
-    output_file = "/workspace/converted_output.wav"
-    
-    # If using .npy file directly
-    if source_file.endswith('.npy'):
+    if args.source_file.endswith('.npy'):
         try:
-            G = load_model(model_path, device)
+            G = load_model(args.model_path, device)
             if G is not None:
-                source_mel = np.load(source_file)
+                source_mel = np.load(args.source_file)
                 source_mel = torch.from_numpy(source_mel).float().unsqueeze(0).to(device)
                 target_id = torch.tensor([1], dtype=torch.long).to(device)
                 
@@ -155,14 +149,13 @@ if __name__ == "__main__":
                     converted = G(source_mel, target_id)
                 
                 converted = converted.squeeze(0).cpu().numpy()
-                np.save("/workspace/converted_mel.npy", converted)
-                print("Conversion completed. Output saved as /workspace/converted_mel.npy")
+                np.save("/workspace/output/converted_mel.npy", converted)
+                print("Conversion completed. Output saved as /workspace/output/converted_mel.npy")
                 print("Use a vocoder to convert mel spectrogram to audio.")
         except Exception as e:
             print(f"Error: {e}")
     
-    # If using audio file
-    elif os.path.exists(source_file) and source_file.endswith('.wav'):
-        convert_voice(model_path, source_file, output_file, target_speaker_id=1)
+    elif os.path.exists(args.source_file) and args.source_file.endswith('.wav'):
+        convert_voice(args.model_path, args.source_file, args.output_file, target_speaker_id=1)
     else:
         print("Please provide a valid .wav or .npy file for conversion.")
