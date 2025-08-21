@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  voice-vc:
+    build: .
+    container_name: voice-vc-container
+    volumes:
+      - ./data:/workspace/data
+      - ./processed:/workspace/processed
+      - ./app:/workspace/app
+      - ./checkpoints:/workspace/checkpoints  # Add checkpoints volume
+      - ./models:/workspace/models  # Add models volume for saved models
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONPATH=/workspace/app
+    # Default command - can be overridden
+    command: python3 /workspace/app/preprocess.py
+    
+  # Additional service for training (optional)
+  voice-vc-train:
+    build: .
+    container_name: voice-vc-train-container
+    volumes:
+      - ./data:/workspace/data
+      - ./processed:/workspace/processed
+      - ./app:/workspace/app
+      - ./checkpoints:/workspace/checkpoints
+      - ./models:/workspace/models
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONPATH=/workspace/app
+    command: python3 /workspace/app/train.py
+    profiles: ["train"]  # Only run when explicitly specified
+    
+  # Additional service for inference (optional)
+  voice-vc-inference:
+    build: .
+    container_name: voice-vc-inference-container
+    volumes:
+      - ./data:/workspace/data
+      - ./processed:/workspace/processed
+      - ./app:/workspace/app
+      - ./checkpoints:/workspace/checkpoints
+      - ./models:/workspace/models
+      - ./output:/workspace/output  # For inference outputs
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONPATH=/workspace/app
+    command: python3 /workspace/app/inference.py
+    profiles: ["inference"]  # Only run when explicitly specified
