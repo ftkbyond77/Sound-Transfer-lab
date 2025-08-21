@@ -1,0 +1,12 @@
+torch==2.1.0+cu126
+torchvision==0.16.1+cu126
+torchaudio==2.1.1+cu126
+-f https://download.pytorch.org/whl/cu126/torch_stable.html
+
+# Audio & numerical libraries
+librosa
+numpy
+soundfile
+
+# Visualization
+matplotlib
