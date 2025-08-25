@@ -50,3 +50,13 @@ services:
       - PYTHONPATH=/workspace/app
     command: python3 /workspace/app/inference.py
     profiles: ["inference"]  # Only run when explicitly specified
+  
+  voice-vc-evaluate:
+    build: .
+    container_name: voice-vc-eval-container
+    volumes:
+      - ./checkpoints:/workspace/checkpoints
+      - ./processed:/workspace/processed
+      - ./output:/workspace/output
+    command: python3 /workspace/app/check_model_accuracy.py
+    profiles: ["evaluate"]

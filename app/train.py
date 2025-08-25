@@ -53,7 +53,7 @@ def train_stargan_vc():
     reconstruction_loss = nn.L1Loss()
     
     # Training parameters
-    num_epochs = 100
+    num_epochs = 500
     lambda_recon = 10.0  # Reconstruction loss weight
     
     # Training loop
